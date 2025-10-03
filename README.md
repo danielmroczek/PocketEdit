@@ -3,7 +3,7 @@
 PocketEdit is a powerful, browser-based web application designed to give you deep, real-time control over your Sonicake Pocket Master multi-effects pedal. It provides a user-friendly graphical interface to manage presets, edit effects, and visualize your entire signal chain, all without needing to install any software.
 
 This single, portable HTML file unlocks the full potential of your device, making tone creation and management faster and more intuitive than ever before.
-It was created as a fun side project using 99% AI programminglogic and 100% hard labour reverse engineering.
+It was created as a fun side project using 99% AI programming logic and 100% hard labour reverse engineering, learning about BLE/HCI snooping and understanding how this device works by looking at logs.
 
 ![screenshot](img/gui.jpg)
 
@@ -30,7 +30,7 @@ Before you begin, please ensure you have the following:
 Getting started with PocketEdit is simple.
 
 1. **Open the File:** Open the `PocketEdit.html` file in your Chrome browser.  
-2. **Connect to your Device:** Click the blue **"Connect"** button in the top-left sidebar.  
+2. **Connect to your Device:** Click the blue **"Connect"** button in the top-left sidebar. *(Make sure you have turned on BT on the Pocket Master)* 
 3. **Pair with Bluetooth:** A browser window will pop up. Select **"Sonic Master BLE"** from the list of available devices and click **"Pair"**.  
 4. **Automatic Sync:** The app will automatically perform a one-time sync of all presets, names, and settings. A loading overlay will appear while this happens. Once it disappears, you're ready to start editing\!
 
