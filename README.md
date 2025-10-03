@@ -20,7 +20,7 @@ It was created as a fun side project using 99% AI programminglogic and 100% hard
 
 Before you begin, please ensure you have the following:
 
-* A compatible multi-effects pedal (e.g., Sonicake Pocket GT).  
+* A compatible multi-effects pedal (Sonicake Pocket Master).  
 * A computer or mobile device with Bluetooth functionality.  
   * If your computer does not have built-in Bluetooth, a USB Bluetooth 5.0 adapter can be used. This model was successfully tested during development: [UGREEN Bluetooth 5.0 USB Adapter](https://www.amazon.de/dp/B0CZD94YFR)  
 * **Google Chrome** (or a modern Chromium-based browser like Microsoft Edge or Brave) that supports the **Web Bluetooth API**. *This is essential for the app to connect to your device.*
