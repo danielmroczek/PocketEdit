@@ -5,6 +5,8 @@ PocketEdit is a powerful, browser-based web application designed to give you dee
 This single, portable HTML file unlocks the full potential of your device, making tone creation and management faster and more intuitive than ever before.
 It was created as a fun side project using 99% AI programminglogic and 100% hard labour reverse engineering.
 
+![screenshot](img/gui.jpg)
+
 ## **Features**
 
 * **Real-Time Editing:** Tweak any parameter and hear the changes instantly on your device. All controls are synced live via Bluetooth.  
