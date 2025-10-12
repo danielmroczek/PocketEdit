@@ -11103,6 +11103,33 @@
                 this.presetNumberInput = document.getElementById('presetNumberInput');
                 this.confirmSaveBtn = document.getElementById('confirmSaveBtn');
                 this.cancelSaveBtn = document.getElementById('cancelSaveBtn');
+
+                // Add a global keydown listener for the space bar to control tap tempo.
+                document.addEventListener('keydown', (e) => {
+                     // Get the currently focused element on the page.
+                     const activeEl = document.activeElement;
+            
+                     // Check if the space bar was pressed AND if the user is NOT currently typing
+                     // inside an <input> element. This prevents the tap tempo from firing
+                     // when the user is searching for patches or entering a manual command.
+                     if (e.code === 'Space' && activeEl.tagName !== 'INPUT') {
+                         // Prevent the default browser action for the space bar (e.g., scrolling the page).
+                         e.preventDefault(); 
+                 
+                         const tapButton = document.getElementById('tap-button-7');
+                         if (tapButton) {
+                             // Add a class for a brief visual flash to give user feedback.
+                             tapButton.classList.add('beat-flash');
+                             
+                             // Programmatically trigger the button's click event.
+                             tapButton.click(); 
+                             
+                             // Remove the flash class after a short delay.
+                             setTimeout(() => tapButton.classList.remove('beat-flash'), 100);
+                         }
+                     }
+                 });
+                 // --- END OF ADDED BLOCK ---
             }
 
             updateSliderProgress(sliderElement) {
@@ -12357,10 +12384,24 @@
                 }
 
                 if (this.isSyncing && hexString.startsWith('8080F0') && hexString.endsWith('F7')) {
-                    this.dumpPackets.push(hexString);
-                    this.log(`Received name dump packet ${this.dumpPackets.length}/20...`, 'info');
-                    if (this.dumpPackets.length >= 20) {
+                    const TERMINATOR_PACKET = "8080F0030601050104000200000000F7";
+                    
+                    clearTimeout(this.nameSyncTimeoutId);
+                
+                    if (hexString === TERMINATOR_PACKET) {
+                        this.log(`✅ Terminator packet received. Processing ${this.dumpPackets.length} data packets.`, 'success              ');
                         this.processAndDisplayDump();
+                    } else {
+                        this.dumpPackets.push(hexString);
+                        this.log(`Received name packet ${this.dumpPackets.length}: ${hexString}`, 'received');
+
+                
+                        this.nameSyncTimeoutId = setTimeout(() => {
+                            if (this.isSyncing) {
+                                this.log(`Name sync timed out after packet ${this.dumpPackets.length}. Processing what was              received.`, 'info');
+                                this.processAndDisplayDump();
+                            }
+                        }, 1500);
                     }
                     return;
                 }
@@ -12446,28 +12487,37 @@
             
             syncPresetNames(isAutomated = false) {
                 return new Promise(async (resolve, reject) => {
-                    if (!this.isConnected) return isAutomated ? reject(new Error('Not connected')) : resolve();
-                    this.log('Starting preset name sync...', 'info');
+                    if (!this.isConnected || this.isSyncing) {
+                        this.log('Sync request ignored: Not connected or already syncing.', 'info');
+                        return isAutomated ? reject(new Error('Already syncing')) : resolve();
+                    }
+            
+                    this.log('Starting preset name sync (using terminator packet)...', 'info');
                     this.isSyncing = true;
                     this.dumpPackets = [];
                     this.syncPresetNamesBtn.disabled = true;
                     this.syncPresetNamesBtn.textContent = 'Syncing...';
             
-                    const timeout = setTimeout(() => {
-                        if (this.isSyncing) {
+                    // Clear any previous timer and set a single, overall timeout for the entire operation.
+                    clearTimeout(this.nameSyncTimeoutId);
+                    this.nameSyncTimeoutId = setTimeout(() => {
+                        if (this.isSyncing) { // This will be true if the terminator packet was never received.
                             this.isSyncing = false;
                             this.syncPresetNamesBtn.disabled = !this.isConnected;
                             this.syncPresetNamesBtn.textContent = 'Sync Preset Names';
-                            if (isAutomated) reject(new Error('Preset name sync timed out.'));
-                            else resolve();
+                            const errorMsg = 'Preset name sync timed out: Terminator packet not received.';
+                            this.log(`❌ ${errorMsg}`, 'error');
+                            if (isAutomated) {
+                               reject(new Error(errorMsg));
+                            } else {
+                               alert('Preset name sync failed to complete.');
+                               resolve(); // Resolve to not leave the UI in a broken promise state.
+                            }
                         }
-                    }, 15000);
+                    }, 10000); // 10-second overall timeout.
             
-                    this.presetNamesPromiseResolve = () => {
-                        clearTimeout(timeout);
-                        this.presetNamesPromiseResolve = null;
-                        resolve();
-                    };
+                    // This promise will be resolved when processAndDisplayDump is called successfully.
+                    this.presetNamesPromiseResolve = resolve;
             
                     await this.writeCommand('8080F0000E00010000000201020400F7');
                 });
@@ -12997,7 +13047,27 @@
                         this.writeCommand = originalWriteCommand;
                     }
                 } finally {
-                    this.isApplyingState = false; // Always reset flag to FALSE when finished
+                    this.isApplyingState = false; // Set flag to FALSE when finished
+                
+                    // If this was the initial sync, perform one final check for modification status
+                    // after the UI has been fully populated.
+                    if (this.isInitialSyncing) {
+                        this.log('Initial sync applied. Performing final check for remote modifications...', 'info');
+                        // A short, non-blocking timeout allows this function to finish before we send the next command,
+                        // which reliably prevents the "GATT operation already in progress" error.
+                        setTimeout(async () => {
+                            await this.writeCommand('8080F0010500010000000201020405F7');
+                            this.isInitialSyncing = false; // The sequence is now TRULY complete.
+                            
+                            const overlay = document.getElementById('lockingOverlay');
+                            overlay.style.display = 'none'; // Hide the sync overlay
+                            overlay.querySelector('p:first-child').textContent = 'Trying to save preset...';
+                            overlay.querySelector('p:last-child').textContent = 'This could take up to 2 minutes!';
+                
+                            this.log('✅ Initial auto-sync sequence complete.', 'info');
+                        }, 150); // A small delay is sufficient.
+                    }
+                
                     this.log('✅ UI sync complete. Command sending re-enabled.', 'info');
                 }
             }
