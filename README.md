@@ -30,7 +30,7 @@ Before you begin, please ensure you have the following:
 
 Getting started with PocketEdit is simple.
 
-1. **Open the File:** Open the `PocketEdit.html` file in your Chrome browser.  
+1. **Open the File:** Open the `index.html` file in your Chrome browser.  
 2. **Connect to your Device:** Click the blue **"Connect"** button in the top-left sidebar. *(Make sure you have turned on BT on the Pocket Master)* 
 3. **Pair with Bluetooth:** A browser window will pop up. Select **"Sonic Master BLE"** from the list of available devices and click **"Pair"**.  
 4. **Automatic Sync:** The app will automatically perform a one-time sync of all presets, names, and settings. A loading overlay will appear while this happens. Once it disappears, you're ready to start editing\!
